@@ -112,12 +112,11 @@ correspondence is:
 | Figure 8 | `Fig9_sizing` | `fig_tariffs.py` (reads `outputs/sweep_sizing.csv`) |
 | Figure 9 | `Fig0_casestudy` | `fig_casestudy.py` |
 | Figure 10 | — | conceptual framework, drawn manually |
-| SI Table 6 (rolling horizon) | `outputs/rolling_horizon.csv` | `rolling_horizon.py` |
-| SI network tariff parameters | `tariffs.py` (`ARCHETYPES`) | — |
+| Table 3 (retail energy prices) | `energy_prices.py` | — |
+| Tables 4 and 5 (network tariffs) | `tariffs.py` (`ARCHETYPES`) | — |
+| Table 6 (rolling horizon) | `outputs/rolling_horizon.csv` | `rolling_horizon.py` |
 
-The single-archetype versions (`*_T0` … `*_T3`), `Fig7_tariff_comparison` and
-`Fig8_distribution` are diagnostic figures not shown in the paper. Each figure
-has a companion `fig*_data.csv` with the plotted numbers, and
+Each figure has a companion `fig*_data.csv` with the plotted numbers, and
 `master_table_T*.csv` collects all scenario-level indicators per archetype.
 
 ## Input data
@@ -127,12 +126,9 @@ profiles of the seven NEST units (`load_<id>`, `PV_<id>`, UTC timestamps) used b
 all models; `inputs.csv` is the raw export from which `data_processing.py`
 builds it. `CH_price_dyn_2025.csv` is the ENTSO-E day-ahead export for the
 Swiss bidding zone; `price_processing.py` derives `price_dynamic_2025.csv`,
-whose hourly shape `energy_prices.py` scales to the retail level (it also
-writes `price_tou_3block_2025.csv` and `price_flat_2025.txt`, which the current
-models do not use: the flat and time-of-use regimes are built from the
-distribution system operator's published rates in `energy_prices.py`). Published
-tariff sheets underlying `tariffs.py` and `energy_prices.py` are cited in the
-Supplementary Information (Section S8).
+whose hourly shape `energy_prices.py` scales to the retail level. The flat and
+time-of-use regimes are built from the distribution system operator's published
+rates in `energy_prices.py`.
 
 ## License
 

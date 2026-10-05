@@ -21,8 +21,6 @@ class Paths:
     INPUTS_FILLED: Path = INPUT_DIR / "inputs_filled.csv"
 
     PRICE_DYNAMIC: Path = INPUT_DIR / "price_dynamic_2025.csv"
-    PRICE_TOU: Path = INPUT_DIR / "price_tou_3block_2025.csv"
-    PRICE_FLAT: Path = INPUT_DIR / "price_flat_2025.txt"
 
 
 @dataclass(frozen=True)

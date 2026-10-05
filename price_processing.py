@@ -2,11 +2,13 @@
 price_processing.py
 ===================
 One-off preprocessing (run manually before main.py, not part of a model run):
-convert the raw ENTSO-E day-ahead export (input_data/CH_price_dyn_2025.csv)
-into the three retail price series consumed by the models:
+convert the raw ENTSO-E day-ahead export (input_data/CH_price_dyn_2025.csv) into
+the hourly day-ahead series used by the models:
   price_dynamic_2025.csv     hourly dynamic price
-  price_tou_3block_2025.csv  3-block time-of-use tariff
-  price_flat_2025.txt        flat tariff
+
+The flat and time-of-use regimes are not derived here: they are built from the
+distribution system operator's published rates in energy_prices.py. The helper
+functions below (build_tou_3block, revenue_neutralize) are kept for reference.
 """
 import numpy as np
 import pandas as pd
@@ -128,16 +130,8 @@ def process_prices_and_save(
     night: Tuple[int, int] = (0, 6),
 ) -> dict:
     """
-    End-to-end price pipeline:
-      1) read ENTSO-E day-ahead (dynamic) as EUR/kWh
-      2) compute flat (annual mean)
-      3) build TOU (3-block) and revenue-neutralize to flat
-      4) save dynamic/tou/flat into out_dir
-    
-    Saves:
-      - price_dynamic_2025_eur_per_kwh.csv
-      - price_tou_3block_2025_eur_per_kwh.csv
-      - price_flat_2025_eur_per_kwh.txt
+    Read the ENTSO-E day-ahead series (EUR/kWh) and save it as
+    price_dynamic_2025.csv in out_dir. Returns the series and its annual mean.
     """
     out_path = Path(out_dir)
     out_path.mkdir(parents=True, exist_ok=True)
@@ -153,40 +147,29 @@ def process_prices_and_save(
     if len(price_dyn) not in (8760, 8784):
         print(f"[WARN] Expected 8760 (or 8784 leap-year) hours, got {len(price_dyn)}.")
 
-    # 2) flat
     price_flat = float(price_dyn.mean())
 
-    # 3) TOU
-    price_tou_raw = build_tou_3block(
-        price_dyn,
-        tz=local_tz,
-        evening_peak=evening_peak,
-        night=night,
-        weekend_offpeak=weekend_offpeak
-    )
-    price_tou = revenue_neutralize(price_tou_raw, target_mean=price_flat)
-    price_tou.name = "price_tou_eur_per_kwh"
-
-    # 4) save
+    # 2) save the hourly day-ahead series
     price_dyn.rename("price_dyn_eur_per_kwh").to_frame().to_csv(
         out_path / "price_dynamic_2025.csv"
     )
-    price_tou.to_frame().to_csv(
-        out_path / "price_tou_3block_2025.csv"
-    )
-    with open(out_path / "price_flat_2025.txt", "w") as f:
-        f.write(f"{price_flat:.10f}")
 
-    # quick debug prints
+    # The flat and time-of-use series are not written: energy_prices.py builds
+    # both regimes from the published retail rates instead.
+    # price_tou = revenue_neutralize(
+    #     build_tou_3block(price_dyn, tz=local_tz, evening_peak=evening_peak,
+    #                      night=night, weekend_offpeak=weekend_offpeak),
+    #     target_mean=price_flat)
+    # price_tou.to_frame().to_csv(out_path / "price_tou_3block_2025.csv")
+    # with open(out_path / "price_flat_2025.txt", "w") as f:
+    #     f.write(f"{price_flat:.10f}")
+
     print("[OK] Saved prices to:", out_path.resolve())
-    print("Dynamic mean (flat):", price_flat)
-    print("TOU mean (after neutralize):", float(price_tou.mean()))
-    print("TOU unique levels:", np.sort(price_tou.unique())[:10], " ...")
+    print("Dynamic mean:", price_flat)
 
     return {
         "price_dyn": price_dyn,
         "price_flat": price_flat,
-        "price_tou": price_tou,
     }
 
 

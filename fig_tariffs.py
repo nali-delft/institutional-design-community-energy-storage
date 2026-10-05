@@ -3,8 +3,9 @@ fig_tariffs.py
 ==============
 Cross-archetype figures covering the network tariff dimension.
 
-    Fig 7   community cost and grid peak across the four tariff archetypes
-    Fig 8   sensitivity of the ranking to the LEG reduction rate delta
+    Fig8_delta_sensitivity   sensitivity of community savings to the statutory
+                             network charge reduction rate delta (paper Figure 6)
+    Fig9_sizing              storage duration and power rating (paper Figure 8)
 
 Both read the per-archetype master tables written by results_analysis.py.
 Run results_analysis.main_all() first so every archetype is available.
@@ -75,79 +76,6 @@ def _at_opt(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # =========================================================
-# Figure 7 - cost and peak across archetypes
-# =========================================================
-def fig7_tariff_comparison(y_cap: float = 40.0) -> None:
-    """
-    Community cost savings for every configuration under the four archetypes,
-    one panel per price regime.
-
-    Layout choices. Panels are sized in proportion to the configurations they
-    show (Settings B and C appear under dynamic pricing only, see
-    MARKET_ACCESS_CONFIGS), and M0 is omitted since it is the reference and
-    zero by construction. The y-axis is shared and capped at `y_cap` so that
-    the bulk of the bars, which lie between 4 and 35 %, remain readable; the
-    single bar above the cap (M3C without a network charge, 69.4 %) is drawn
-    to the cap with a break marker and its value printed above it.
-    """
-    frames = []
-    for t in TARIFF_GRID:
-        d = _at_opt(_master(t)).assign(tariff=t)
-        frames.append(d)
-    df = pd.concat(frames, ignore_index=True)
-
-    panel_labels = {m: [l for l in labels_for_mode(m) if l != "M0"] for m in MODES}
-    widths = [len(panel_labels[m]) for m in MODES]
-
-    with paper_style():
-        fig, axes = plt.subplots(1, 3, figsize=(13, 4.8), sharey=True,
-                                 gridspec_kw=dict(width_ratios=widths, wspace=0.08))
-        w = 0.2
-        for ax, mode in zip(axes, MODES):
-            sub = df[df["mode"] == mode]
-            labels = panel_labels[mode]
-            x = np.arange(len(labels))
-            for k, t in enumerate(TARIFF_GRID):
-                s = sub[sub.tariff == t].set_index("label").reindex(labels)
-                vals = s["savings_pct"].to_numpy(dtype=float)
-                shown = np.minimum(vals, y_cap)
-                bars = ax.bar(x + (k - 1.5) * w, shown, w,
-                              label=TARIFF_LABEL[t] if mode == MODES[0] else None,
-                              color=TARIFF_COLOR[t], edgecolor="white", linewidth=0.4)
-                # bars above the cap: break marker and value label
-                for xi, v, b in zip(x + (k - 1.5) * w, vals, bars):
-                    if np.isfinite(v) and v > y_cap:
-                        for dy in (-1.6, -0.6):
-                            ax.plot([xi - 0.55 * w, xi + 0.55 * w],
-                                    [y_cap + dy - 0.5, y_cap + dy + 0.5],
-                                    color="white", lw=2.2, zorder=5, clip_on=False)
-                            ax.plot([xi - 0.55 * w, xi + 0.55 * w],
-                                    [y_cap + dy - 0.5, y_cap + dy + 0.5],
-                                    color=TARIFF_COLOR[t], lw=0.9, zorder=6, clip_on=False)
-                        ax.annotate(f"{v:.1f}", xy=(xi, y_cap), xytext=(0, 5),
-                                    textcoords="offset points", ha="center", va="bottom",
-                                    fontsize=ANNOT_SIZE - 1, fontweight="bold",
-                                    color=TARIFF_COLOR[t], clip_on=False)
-            ax.axhline(0, color="0.3", lw=0.8)
-            ax.set_xticks(x)
-            ax.set_xticklabels(labels, rotation=0)
-            ax.set_xlim(-0.6, len(labels) - 0.4)
-            ax.set_title(MODE_LABEL[mode])
-            ax.grid(axis="y")
-            # light separators between the ownership groups
-            for lab_a, lab_b in (("M2", "M3A"), ("M3C", "M4A"), ("M3A", "M4A")):
-                if lab_a in labels and lab_b in labels and labels.index(lab_b) == labels.index(lab_a) + 1:
-                    ax.axvline(labels.index(lab_a) + 0.5, color="0.85", lw=0.8, zorder=0)
-        axes[0].set_ylim(0, y_cap * 1.08)
-        axes[0].set_ylabel("Community cost savings vs. M0 (%)")
-        fig.legend(loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.06), frameon=False)
-        fig.tight_layout()
-        savefig(fig, "Fig7_tariff_comparison")
-
-    df.to_csv(FIG_DIR / "fig7_tariff_comparison_data.csv", index=False, float_format="%.4f")
-
-
-# =========================================================
 # Figure 8 - sensitivity to the LEG reduction rate
 # =========================================================
 def _row_at_opt_ploc(df: pd.DataFrame, label: str, mode: str, tariff: str) -> pd.Series:
@@ -167,56 +95,6 @@ def _summary(model: str, mode: str, design: str, tariff: str) -> pd.DataFrame:
             else f"model{model}_summary_{mode}_{tariff}.csv")
     p = DATA_DIR / stem
     return pd.read_csv(p) if p.exists() else pd.DataFrame()
-
-
-# =========================================================
-# Figure 8 - distributional outcomes across archetypes
-# =========================================================
-def fig8_distribution() -> None:
-    """
-    How the network tariff shapes the distribution of benefits, not only its size.
-
-    Two panels under dynamic pricing: the dispersion of household savings, and
-    the gap between generating and non-generating households. Fig. 7 reports the
-    same configurations by total saving; this reports who receives it.
-    """
-    frames = []
-    for t in TARIFF_GRID:
-        d = _at_opt(_master(t)).assign(tariff=t)
-        frames.append(d)
-    df = pd.concat(frames, ignore_index=True)
-    df = df[(df["mode"] == "dynamic") & (df["label"] != "M0")]
-    df["pv_gap"] = df["pv_mean_savings"] - df["nopv_mean_savings"]
-
-    labs = [l for l in LABELS if l != "M0"]
-    panels = [("cv_savings", "CV of household savings", None),
-              ("pv_gap", "PV minus non-PV mean saving (%)", 0.0)]
-
-    with paper_style():
-        fig, axes = plt.subplots(1, 2, figsize=(13, 4.8))
-        x = np.arange(len(labs)); w = 0.2
-        for ax, (col, ylab, zero) in zip(axes, panels):
-            for k, t in enumerate(TARIFF_GRID):
-                sdf = df[df.tariff == t].set_index("label").reindex(labs)
-                ax.bar(x + (k - 1.5) * w, sdf[col], w,
-                       label=TARIFF_LABEL[t] if col == "cv_savings" else None,
-                       color=TARIFF_COLOR[t], edgecolor="white", linewidth=0.4)
-            if zero is not None:
-                ax.axhline(zero, color="0.3", lw=0.8)
-            ax.set_xticks(x); ax.set_xticklabels(labs, rotation=45, ha="right")
-            ax.set_ylabel(ylab); ax.grid(axis="y")
-        axes[0].set_title("Coefficient of variation of household savings")
-        axes[1].set_title("Gap between PV and non-PV households")
-        fig.legend(loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.12))
-        # figure title omitted: the caption identifies the figure
-        # fig.suptitle("Distribution of community benefits under four network tariff archetypes "
-                     # "(dynamic pricing)", y=1.02)
-        fig.tight_layout()
-        savefig(fig, "Fig8_distribution")
-
-    df[["label", "tariff", "pi_loc", "savings_pct", "cv_savings",
-        "pv_mean_savings", "nopv_mean_savings", "pv_gap"]].to_csv(
-        FIG_DIR / "fig8_distribution_data.csv", index=False, float_format="%.4f")
 
 
 def fig8_delta_sensitivity(deltas=DELTA_GRID, tariffs=("T1", "T2", "T3")) -> None:
@@ -310,10 +188,6 @@ def fig8_delta_sensitivity(deltas=DELTA_GRID, tariffs=("T1", "T2", "T3")) -> Non
 
 
 def main() -> None:
-    print("Fig7_tariff_comparison ...")
-    fig7_tariff_comparison()
-    print("Fig8_distribution ...")
-    fig8_distribution()
     print("Fig8_delta_sensitivity ...")
     fig8_delta_sensitivity()
     print("Fig9_sizing ...")

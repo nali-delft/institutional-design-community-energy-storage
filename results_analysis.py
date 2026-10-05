@@ -1237,7 +1237,10 @@ def _set_group_xticks(ax, groups):
 # MAIN
 # -----------------------------------------------------------------------------
 
-def main(tariff: str | None = None):
+def main(tariff: str | None = None, figures: bool = True):
+    """Build the master table for one archetype and, unless `figures` is False,
+    render that archetype's own panels. The paper uses the composite figures
+    drawn by main_all(), so the per-archetype panels are optional."""
     if tariff is not None:
         set_tariff(tariff)
     print("=" * 60)
@@ -1247,6 +1250,8 @@ def main(tariff: str | None = None):
     print("\n[1/7] Building master table ...")
     master = build_master()
     print(f"      {len(master)} rows x {len(master.columns)} columns")
+    if not figures:
+        return
 
     # Each figN_* writes figures/FigN_*<tag>.pdf; see README.md for the mapping
     # between these file names and the figure numbers of the paper.
@@ -1277,7 +1282,7 @@ def main_all(tariffs=None):
     composites are the versions used in the paper (see README.md)."""
     from config import TARIFF_GRID
     for t in (tariffs or TARIFF_GRID):
-        main(t)
+        main(t, figures=False)
     print("\nComposite figures across the four archetypes ...")
     fig1_heatmap_all()
     figS_market_access_by_tariff()        # -> Fig2_market_access_all
