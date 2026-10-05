@@ -88,7 +88,7 @@ Run settings
 `config.py`.
 
 This repository mirrors the archived release on Zenodo
-(https://doi.org/10.5281/zenodo.22847518), which is the citable version of record.
+(https://doi.org/10.5281/zenodo.21132071), which is the citable version of record.
 
 **Model results (`outputs/`)** are distributed as a separate archive
 (`outputs.zip`, ~450 MB unpacked) because of their size. Unpack it into the
