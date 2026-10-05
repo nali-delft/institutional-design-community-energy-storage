@@ -1,0 +1,19 @@
+# Local environment
+.venv/
+__pycache__/
+*.pyc
+
+# Editor / OS
+.DS_Store
+
+# Working backups (kept outside the repository)
+*.bak
+*.bak_*
+
+# Run logs
+run_main.log
+run_sweep.log
+run_rolling.log
+
+# Model results are archived on Zenodo (see README), not in git
+outputs/

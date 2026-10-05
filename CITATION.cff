@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use this code or data, please cite the associated article and this repository."
+type: software
+title: "Institutional design of community energy storage: source code and data"
+version: 1.0.0
+date-released: 2026-09-18
+license: MIT
+doi: 10.5281/zenodo.22847518
+authors:
+  - family-names: Li
+    given-names: Na
+    orcid: "https://orcid.org/0000-0002-4898-186X"
+    affiliation: "Urban Energy Systems Laboratory, Empa, Swiss Federal Laboratories for Materials Science and Technology"
+  - family-names: Koirala
+    given-names: Binod
+    orcid: "https://orcid.org/0000-0002-8492-220X"
+    affiliation: "Urban Energy Systems Laboratory, Empa, Swiss Federal Laboratories for Materials Science and Technology"
+keywords:
+  - community energy storage
+  - energy communities
+  - institutional design
+  - network tariffs
+  - local electricity community
+  - value distribution
+preferred-citation:
+  type: article
+  title: "Institutional design of community energy storage: value creation, capture, and distribution"
+  journal: iScience
+  year: 2026
+  authors:
+    - family-names: Li
+      given-names: Na
+      orcid: "https://orcid.org/0000-0002-4898-186X"
+    - family-names: Koirala
+      given-names: Binod
+      orcid: "https://orcid.org/0000-0002-8492-220X"

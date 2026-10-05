@@ -1,0 +1,4 @@
+mode,design,storage_service_revenue,market_margin,fixed_fee,storage_connection_network_charge,m4_minus_m3_cost_diff
+dynamic,A,98.8267,-0.0000,0.0000,0.0000,98.8267
+dynamic,B,1383.6898,-1475.8086,0.0000,0.0000,-92.1188
+dynamic,C,408.7115,1312.9282,0.0000,0.0000,1721.6397
